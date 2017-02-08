@@ -16,25 +16,47 @@ def draw_pools(x):
     draw_polygon(P,ax,'blue')
 
 
-
-
 dt = 0.05
 x = array([[4],[5],[2]])
 u = array([[1],[2]])
 
+def q(h):
+	a = 0.4 # pool area
+	g = 9.81 # gravite
+	qh = a*np.sign(h)*sqrt(2*g*abs(h))
+	return qh
+	
+	
+def regulation(x,w,dw,ei,dt):
+	y = array([[x[0,0]],[x[2,0]]])
+	b = array([[-q(x[0,0]) - q(x[0,0]-x[1,0])], [-q(x[2,0]) + q(x[1,0]-x[2,0])]])
+	e = np.subtract(w,y)
+	ei = ei + e*dt
+	v = ei + 2*e + dw
+	u = v - b
+	return u
 
 def f(x,u):
-    return(array([[0.1],[0.3],[1.5]]))
+	xdot = array([[-q(x[0,0]) - q(x[0,0]-x[1,0]) + u[0,0]],
+	              [q(x[0,0]-x[1,0]) - q(x[1,0]-x[2,0])],
+	              [-q(x[2,0]) + q(x[1,0]-x[2,0]) + u[1,0]]])
+	return xdot
     
 
 fig = figure(0)    
 ax = fig.add_subplot(111, aspect='equal')
 
-for t in arange(0,1,dt) :
-    pause(0.01) 
-    cla()       
-    ax.set_xlim(-10,25)
-    ax.set_ylim(-2,12)         
-    draw_pools(x)
-    x = x + dt*f(x,u)  
-show()  
+for t in arange(0,10,dt) :
+	pause(0.01)
+	cla()
+	ax.set_xlim(-10,25)
+	ax.set_ylim(-2,12)
+	draw_pools(x)
+	# consigne
+	w = array([[3],[3]])
+	dw = array([[0],[0]])
+	# initialisation de l'erreur integrale
+	ei = 0
+	u = regulation(x,w,dw,ei,dt)
+	x = x + dt*f(x,u)  
+show()
