@@ -30,14 +30,14 @@ def eulermat(φ,θ,ψ):
     Ad_i = array([[0, 0, 0],[0,0,-1],[0,1,0]])
     Ad_j = array([[0,0,1],[0,0,0],[-1,0,0]])
     Ad_k = array([[0,-1,0],[1,0,0],[0,0,0]])
-    M = expm(ψ*Ad_k) * expm(θ*Ad_j) * expm(φ*Ad_i)
+    M = expm(ψ*Ad_k) @ expm(θ*Ad_j) @ expm(φ*Ad_i)
     return(M)    
     
 def move_motif(M,x,y,θ):
     M1=ones((1,len(M[1,:])))
     M2=concatenate((M, M1), axis=0)
     R = array([[cos(θ),-sin(θ),x], [sin(θ),cos(θ),y]])
-    return(R * M2)    
+    return(R @ M2)    
     
     
 def draw_tank(x):
@@ -56,8 +56,8 @@ def draw_ellipse(c,Γ,η,ax,col): # Gaussian confidence ellipse with artist
     w, v = eig(A)    
     v1=array([[v[0,0]],[v[1,0]]])
     v2=array([[v[0,1]],[v[1,1]]])        
-    f1=A * v1
-    f2=A * v2      
+    f1=A @ v1
+    f2=A @ v2      
     phi =  (arctan2(v1 [1,0],v1[0,0]))
     alpha=phi*180/3.14
     e = Ellipse(xy=c, width=2*norm(f1), height=2*norm(f2), angle=alpha)   
@@ -141,16 +141,16 @@ def mvnrnd1(G):
     
 
 def kalman_predict(xup,Gup,u,Γα,A):
-    Γ1 = A * Gup * A.T + Γα
-    x1 = A * xup + u    
+    Γ1 = A @ Gup @ A.T + Γα
+    x1 = A @ xup + u    
     return(x1,Γ1)    
 
 def kalman_correc(x0,Γ0,y,Γβ,C):
-    S = C * Γ0 * C.T + Γβ        
-    K = Γ0 * C.T * inv(S)           
-    ytilde = y - C * x0        
-    Gup = (eye(len(x0))-K * C) * Γ0 
-    xup = x0 + K*ytilde
+    S = C @ Γ0 @ C.T + Γβ        
+    K = Γ0 @ C.T @ inv(S)           
+    ytilde = y - C @ x0        
+    Gup = (eye(len(x0))-K @ C) @ Γ0 
+    xup = x0 + K@ytilde
     return(xup,Gup) 
     
 def kalman(x0,Γ0,u,y,Γα,Γβ,A,C):
@@ -214,10 +214,10 @@ def demo_random():
     xbar = array([[1],[2]])
     Γx = array([[3,1],[1,3]])
     X=randn(2,N)
-    X = (xbar * ones((1,N))) + sqrtm(Γx) * X
+    X = (xbar @ ones((1,N))) + sqrtm(Γx) @ X
     xbar_ = mean(X,axis=1)
-    Xtilde = X - xbar * ones((1,N))
-    Γx_ = (Xtilde * Xtilde.T)/N
+    Xtilde = X - xbar @ ones((1,N))
+    Γx_ = (Xtilde @ Xtilde.T)/N
     fig = figure(0)    
     ax = fig.add_subplot(111, aspect='equal')
     cla()
