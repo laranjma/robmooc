@@ -38,10 +38,33 @@ function ex_plane
                 0.1*w(1)*w(2)+0.1*V^2*(beta+0.5*u(3)+0.5*(w(1)-2*w(3))/V)]
              ];
     end
+
+    function u=control(x)
+        phi=x(4); theta=x(5); psi=x(6); v=norm(x(7:9)); 
+        psibar=atan2(x(2),x(1))+0.5*pi+atan((norm(x(1:2))-rbar)/50);
+        thetabar=-0.2*atan(0.1*(zbar-x(3)));
+        phibar=0.5*atan(5*atan(tan(0.5*(psibar-psi))));
+        u=[ 5*(1+2/pi*atan(vbar-v));
+           -0.3*(2/pi*atan(5*(thetabar-theta))+abs(sin(phi)));
+           -0.3*2/pi*atan(5*(phibar-phi))];
+    end
 %----------------  Main  ------------------------
 init;
 x=[0;0;-5;0;0;0;30;0;0;0;0;0]; %[x;y;z;phi;theta;psi;v;w]
-e=15;  clf;axis([-e,e,-e,e,-e,e]); axis square;hold on;
-u=[0;0;0];
-draw(x,u);
+e=150;  clf;axis([-e,e,-e,e,-e,e]); axis square;hold on;
+dt = 0.02; vbar=15; zbar=-50; rbar=100;
+C0=[];
+for t1=0:0.01:2*pi
+    C0=[C0,[rbar*cos(t1);rbar*sin(t1);-zbar]];
+    plot3(C0(1,:),C0(2,:),C0(3,:),'green');
+end;
+
+k=0;
+for t=0:dt:50
+    k=k+1;
+    u = control(x);
+    x = x + f(x,u)*dt;
+    if(mod(k,20)==0),draw(x,u);end;
+    
+end
 end
