@@ -1,4 +1,5 @@
 function ex_sailboat
+clc;
 
 function draw(x) 
    clf; axis([-100,100,-60,60]); hold on; 
@@ -22,7 +23,11 @@ function draw(x)
    plot(rudder(1,:),rudder(2,:),'red');
    plot(Mfs(1,:),Mfs(2,:),'blue');
    plot(Mfr(1,:),Mfr(2,:),'blue');
+   
+   plot([a(1),b(1)],[a(2),b(2)],'red');
+
    drawnow();
+
 end
 
 function  xdot = f(x,u) % evolution function
@@ -40,15 +45,37 @@ function  xdot = f(x,u) % evolution function
     dtheta=w;
     dv=(1/p9)*(sin(deltas)*fs-sin(deltar)*fr-p2*v^2);
     dw=(1/p10)*((p6-p7*cos(deltas))*fs-p8*cos(deltar)*fr-p3*w*v);
-    xdot=([dx;dy;dtheta;dv;dw]);       
+    xdot=([dx;dy;dtheta;dv;dw]);
 end
 
+function u = control(x)
+    theta = x(3);
+    m = [x(1);x(2)];
+    e = det([(b-a)/norm(b-a), m-a]);
+        
+    phi = atan2(b(2)-a(2), b(1)- a(1));
+    thetabar= phi -  atan(e/r);
+    deltar = 2/pi*atan(tan(0.5*(theta-thetabar)));
+    deltasmax=pi/4*(cos(psi-thetabar)+1);
+    u=[deltar;deltasmax];
+    end
+
 %----------  Main -------------
-x=[10;-40;-3;1;0]; %x=(x,y,theta,v,w)
-u=[0.5;1]; % input
+x=[10;40;-3;1;0]; %x=(x,y,theta,v,w)
 p1=0.1; p2=1; p3=6000; p4=1000; p5=2000;
 p6=1; p7=1; p8=2; p9=300;p10=10000;     
-awind=2; psi=-2; 
+awind=2; psi=-pi/4; 
 deltas=0; fs=0; fr=0;
-draw(x);
+a = [-100;-5]; b = [100;20];
+
+r=10;
+
+
+
+dt = 0.1;
+for t=0:dt:80
+    u = control(x);
+    x = x + f(x,u)*dt;
+    draw(x);
+end
 end
